@@ -1,0 +1,23 @@
+[Unit]
+Description=Mongodb HAProxy Service
+After=docker.service
+Requires=docker.service
+Wants=mongodb-haproxy-discovery@%i.service
+Before=mongodb-haproxy-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill mongodb-haproxy-%m
+ExecStartPre=-/usr/bin/docker rm -f mongodb-haproxy-%m
+ExecStartPre=/usr/bin/docker pull storyair/mongodb-haproxy:latest
+ExecStart=/usr/bin/docker run -p 27017:27017 --name mongodb-haproxy-%m storyair/mongodb-haproxy:latest
+ExecStop=/usr/bin/docker stop mongodb-haproxy-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+X-Conflicts=mongodb-server@*.service
+Conflicts=mongodb-server@*.service

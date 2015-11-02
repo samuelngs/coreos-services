@@ -1,0 +1,25 @@
+[Unit]
+Description=Mongodb HAProxy Discovery Service
+BindsTo=mongodb-haproxy@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStart=/bin/bash -c '\
+  while true; do \
+    curl -f ${COREOS_PUBLIC_IPV4}:27017; \
+    if [ $? -eq 0 ]; then \
+      /usr/bin/etcdctl set /announce/service/mongodb-haproxy/%m \'{"IP":"${COREOS_PUBLIC_IPV4}", "PORT":"27017"}\' --ttl 60; \
+    else \
+      /usr/bin/etcdctl rm /announce/service/mongodb-haproxy/%m; \
+    fi; \
+    sleep 20; \
+  done'
+ExecStop=/usr/bin/etcdctl rm /announce/service/mongodb-haproxy/%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+MachineOf=mongodb-haproxy@%i.service
