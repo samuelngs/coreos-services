@@ -1,0 +1,23 @@
+[Unit]
+Description=FS HAProxy Service
+After=docker.service
+Requires=docker.service
+Wants=fs-haproxy-discovery@%i.service
+Before=fs-haproxy-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill fs-haproxy-%m
+ExecStartPre=-/usr/bin/docker rm -f fs-haproxy-%m
+ExecStartPre=/usr/bin/docker pull storyair/fs-haproxy:latest
+ExecStart=/usr/bin/docker run -p 9333:9333 --name fs-haproxy-%m storyair/fs-haproxy:latest
+ExecStop=/usr/bin/docker stop fs-haproxy-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+X-Conflicts=fs-server@*.service
+Conflicts=fs-server@*.service
