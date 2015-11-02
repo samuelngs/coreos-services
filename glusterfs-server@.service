@@ -1,0 +1,22 @@
+[Unit]
+Description=Glusterfs Service
+After=docker.service
+Requires=docker.service
+After=flanneld.service
+Requires=flanneld.service
+After=etcd2.service
+Requires=etcd2.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker stop glusterfs-server-%m
+ExecStartPre=/usr/bin/docker pull storyair/glusterfs-server:latest
+ExecStart=/bin/sh -c '/usr/bin/docker start -a glusterfs-server-%m || /usr/bin/docker run --net=host --privileged --name glusterfs-server-%m storyair/glusterfs-server:latest'
+ExecStop=/usr/bin/docker stop glusterfs-server-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
