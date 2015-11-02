@@ -1,0 +1,21 @@
+[Unit]
+Description=Redis 3.0 Cluster Database Service
+After=docker.service
+Requires=docker.service
+Wants=redis-server-discovery@%i.service
+Before=redis-server-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill redis-%m
+ExecStartPre=-/usr/bin/docker rm -f redis-%m
+ExecStartPre=/usr/bin/docker pull storyair/redis-server:latest
+ExecStart=/usr/bin/docker run --name redis-%m storyair/redis-server:latest %m ${COREOS_PUBLIC_IPV4} 6379
+ExecStop=/usr/bin/docker stop redis-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
