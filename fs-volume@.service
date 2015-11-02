@@ -1,0 +1,22 @@
+[Unit]
+Description=WeedFS Volume Service
+After=docker.service
+Requires=docker.service
+Wants=fs-volume-discovery@%i.service
+Before=fs-volume-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/mkdir -p /home/core/data/fs-volume
+ExecStartPre=-/usr/bin/docker kill fs-volume-%m
+ExecStartPre=-/usr/bin/docker rm fs-volume-%m
+ExecStartPre=-/usr/bin/docker pull storyair/fs-volume:latest
+ExecStart=/usr/bin/docker run --name fs-volume-%m -v /home/core/data/fs-volume:/data -p 9333:9333 -p 8080:8080 storyair/fs-volume
+ExecStop=/usr/bin/docker stop fs-volume-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service

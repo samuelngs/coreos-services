@@ -1,0 +1,21 @@
+[Unit]
+Description=WeedFS Server Service
+After=docker.service
+Requires=docker.service
+Wants=fs-server-discovery@%i.service
+Before=fs-server-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill fs-server-%m
+ExecStartPre=-/usr/bin/docker rm fs-server-%m
+ExecStartPre=-/usr/bin/docker pull storyair/fs-server:latest
+ExecStart=/usr/bin/docker run --name fs-server-%m -p 9333:9333 storyair/fs-server
+ExecStop=/usr/bin/docker stop fs-server-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
