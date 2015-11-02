@@ -1,0 +1,19 @@
+[Unit]
+Description=MaraDNS Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill maradns-server-%m
+ExecStartPre=-/usr/bin/docker rm -f maradns-server-%m
+ExecStartPre=/usr/bin/docker pull storyair/maradns-server:latest
+ExecStart=/usr/bin/docker run -p 53:53/udp --name maradns-server-%m storyair/maradns-server:latest
+ExecStop=/usr/bin/docker stop maradns-server-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
