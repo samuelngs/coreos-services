@@ -1,0 +1,23 @@
+[Unit]
+Description=Redis HAProxy Service
+After=docker.service
+Requires=docker.service
+Wants=redis-haproxy-discovery@%i.service
+Before=redis-haproxy-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill redis-haproxy-%m
+ExecStartPre=-/usr/bin/docker rm -f redis-haproxy-%m
+ExecStartPre=/usr/bin/docker pull storyair/redis-haproxy:latest
+ExecStart=/usr/bin/docker run -p 6379:6379 --name redis-haproxy-%m storyair/redis-haproxy:latest
+ExecStop=/usr/bin/docker stop redis-haproxy-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+X-Conflicts=redis-server@*.service
+Conflicts=redis-server@*.service
