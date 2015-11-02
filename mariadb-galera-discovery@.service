@@ -1,0 +1,25 @@
+[Unit]
+Description=MariaDB (Galera) Discovery Service
+BindsTo=mariadb-galera@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStart=/bin/bash -c '\
+  while true; do \
+    curl -f ${COREOS_PUBLIC_IPV4}:3306; \
+    if [ $? -eq 0 ]; then \
+      /usr/bin/etcdctl set /announce/service/mariadb-server/%m \'{"IP":"${COREOS_PUBLIC_IPV4}", "PORT":"3306"}\' --ttl 60; \
+    else \
+      /usr/bin/etcdctl rm /announce/service/mariadb-server/%m; \
+    fi; \
+    sleep 20; \
+  done'
+ExecStop=/usr/bin/etcdctl rm /announce/service/mariadb-server/%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+MachineOf=mariadb-galera@%i.service

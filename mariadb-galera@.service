@@ -1,0 +1,23 @@
+[Unit]
+Description=MariaDB (Galera Cluster) Database Service
+After=docker.service
+Requires=docker.service
+Wants=mariadb-galera-discovery@%i.service
+Before=mariadb-galera-discovery@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=0
+Restart=always
+RestartSec=10s
+ExecStartPre=-/usr/bin/docker kill mariadb-galera-%m
+ExecStartPre=-/usr/bin/docker rm -f mariadb-galera-%m
+ExecStartPre=/usr/bin/docker pull storyair/mariadb-galera:latest
+ExecStart=/usr/bin/docker run -p 3306:3306 -p 4444:4444 -p 4567:4567 -p 4568:4568 --name mariadb-galera-%m storyair/mariadb-galera:latest %i
+ExecStop=/usr/bin/docker stop mariadb-galera-%m
+
+[X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
+X-Conflicts=mariadb-maxscale@*.service
+Conflicts=mariadb-maxscale@*.service
